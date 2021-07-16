@@ -1,0 +1,476 @@
+---
+title: "Intro to data.table"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '4'
+    df_print: paged
+  html_notebook:
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: yes
+    theme: darkly
+---
+
+# Setting up R environment
+
+## Load necessary packages from libraries
+```{r}
+library(rstudioapi)
+library(data.table)
+```
+
+## Set working directory (should be universal)
+```{r}
+setwd(
+  dirname(
+    rstudioapi::callFun(
+      'getActiveDocumentContext'
+    )$path
+  )
+)
+
+getwd()
+```
+
+# Quick Intro to 'data.table'
+
+## Creating data.tables
+
+### Make two data tables from data frames.
+```{r}
+DF = data.frame(x=c("b","b","b","a","a"),v=rnorm(5))
+DF
+
+library(data.table)
+DT = data.table(DF)
+DT
+
+CARS = data.table(cars)
+head(CARS)
+```
+
+### View the data tables in the memory
+```{r}
+tables()
+```
+
+### View the column types in a table
+```{r}
+sapply(DT, class)
+```
+
+## Data table "keys" (argument 'i')
+```{r}
+DT
+
+DT[2,]
+
+DT[x=="b",]
+
+cat(try(DT["b",], silent=T)) #no row names. must set key
+
+setkey(DT,x)
+DT #DT is now sorted by column x
+
+haskey(DT); key(DT); attributes(DT); tables() #4 different ways to confirm DT has a key
+
+DT["b",] #now we can call only "b" values from column 'x' (comma is optional)
+DT["b"]
+
+DT["b",mult="first"] #allows just the first row of the group to be returned
+DT["b",mult="last"] #allows just the last row of the group to be returned
+
+# Create a new data.frame to illustrate difference between 'vector scan' and 'binary search'
+
+grpsize = ceiling(1e7/26^2) #10 million rows, 676 groups
+
+#first with a data.frame
+tt = system.time(DF <- data.frame(
+  x=rep(LETTERS, each=26*grpsize),
+  y=rep(letters, each=grpsize),
+  v=runif(grpsize*26^2),
+  stringsAsFactors=FALSE))
+
+head(DF,3)
+tail(DF,3)
+
+dim(DF)
+
+tt=system.time(ans1 <- DF[DF$x=="R" & DF$y=="h",]) # this is a 'vector scan'
+
+head(ans1,3)
+tail(ans1,3)
+dim(ans1)
+
+#second with a data.table
+DT = as.data.table(DF)      # but normally use fread() or data.table() directly, originally
+system.time(setkey(DT,x,y)) # one-off cost, usually
+
+ss=system.time(ans2 <- DT[list("R","h")]) # this is a 'binary search'
+
+head(ans2,3)
+tail(ans2,3)
+dim(ans2)
+
+identical(ans1$v, ans2$v)
+
+#vector scanning a data.table is unwise, might as well just use a data.frame
+system.time(ans1 <- DT[x=="R" & y=="h",])       # this works, but is silly
+
+system.time(ans2 <- DF[DF$x=="R" & DF$y=="h",]) # the data.frame way, not much slower
+
+mapply(identical, ans1, ans2)
+```
+
+When we used x=="R" we scanned the entire column x, testing each and every value to see if it equalled "R". We did it again in the y column, testing for "h". Then & combined the two logical results to create a single logical vector which was passed to the [ method, which in turn searched it for TRUE and returned those rows. These were vectorized operations. They occurred internally in R and were very fast, but they were scans. We did those scans because we wrote that R code.
+ 
+When i is a list (and data.table is a list too), we say that we are joining. In this case, we are joining DT to the 1 row, 2 column table returned by list("R","h"). Since we do this a lot,
+there is an alias for list: .().
+
+```{r}
+identical(DT[list("R","h")], DT[.("R","h")])
+```
+
+## Fast grouping (argument 'j')
+```{r}
+DT[,sum(v)]      # sum(v) is in the 'j' position
+
+DT[,sum(v),by=x] # 'by' indicates which groups element 'j' is the be repeated...by
+
+#this approach is much, much faster than other options
+ttt = system.time(tt <- tapply(DT$v,DT$x,sum)); ttt
+
+sss = system.time(ss <- DT[,sum(v), b=x]); sss
+
+head(tt)
+head(ss)
+
+identical(as.vector(tt), ss$V1)
+
+#especially when grouping by 2 or more columns
+ttt = system.time(tt <- tapply(DT$v,list(DT$x,DT$y),sum)); ttt
+
+sss = system.time(ss <- DT[,sum(v),by="x,y"]); sss
+
+tt[1:5,1:5]
+head(ss)
+
+identical(as.vector(t(tt)), ss$V1)
+
+#this is also known as 'last observation carried forward' (LOCF), or a 'rolling join'.
+```
+
+# Long Intro to 'data.table'
+
+## Load data
+```{r}
+flights = fread("https://raw.githubusercontent.com/wiki/arunsrinivasan/flights/NYCflights14/flights14.csv")
+head(flights)
+dim(flights)
+```
+
+## Subsetting and selecting data
+```{r}
+#subset
+ans = flights[origin == "JFK" & month == 6L]
+head(ans)
+
+#select rows
+ans = flights[1:2]
+ans
+
+ans = flights[order(origin, -dest)]
+ans
+
+#select column as vector
+ans = flights[,arr_delay]
+
+#select column as data.table (.() = list() in data.table)
+ans = flights[,.(arr_delay)]
+ans
+
+#select multiple columns
+ans = flights[,.(arr_delay, dep_delay)]
+ans
+
+#rename columns on selection
+ans = flights[,.(delay_arr=arr_delay, delay_dep=dep_delay)]
+ans
+
+#perform computation on columns
+ans = flights[,sum((arr_delay+dep_delay)<0)]
+ans
+
+#subset first, then compute
+ans = flights[origin=="JFK" & month ==6L,.(m_arr=mean(arr_delay), 
+                                           m_dep=mean(dep_delay))]
+ans
+
+ans = flights[origin == "JFK" & month == 6L, length(dest)]
+ans
+ #...is equivalent to...
+
+ans = flights[origin == "JFK" & month == 6L, .N]
+ans
+
+#...or as a data.table
+ans = flights[origin == "JFK" & month == 6L, .(.N)]
+ans
+
+#select columns by names, like in data.frame
+ans = flights[,c("arr_delay", "dep_delay"), with=F]
+ans
+
+#select a bunch of columns at once
+ans = flights[, year:day, with=FALSE]    # everything between 'year' and 'day'
+ans
+ans = flights[, day:year, with=FALSE]    # the same, in reverse order
+ans
+ans = flights[, -(year:day), with=FALSE] # return everything but 'year' to 'day'
+ans
+ans = flights[, !(year:day), with=FALSE] # return everything byt 'year' to 'day'
+ans
+```
+
+## Aggregating with data.table
+```{r}
+ans = flights[, .(.N), by=.(origin)]
+ans
+
+ans = flights[, .(.N), by="origin"]
+ans
+
+ans = flights[carrier == "AA", .N, by=origin]
+ans
+
+ans = flights[carrier == "AA", .N, by=.(origin,dest)]
+head(ans)
+
+ans = flights[carrier == "AA", 
+              .(mean(arr_delay), mean(dep_delay)), 
+              by=.(origin, dest, month)]
+ans
+
+ans = flights[carrier == "AA", 
+              .(mean(arr_delay), mean(dep_delay)), 
+              keyby=.(origin, dest, month)]         # this orders the result
+ans
+```
+
+## Chaining
+```{r}
+#we can tack expressions one after another, forming a chain of operations, 
+#i.e., DT[ ... ][ ... ][ ... ]; this can avoid intermediate steps
+ans = flights[carrier == "AA", .N, by=.(origin, dest)][order(origin, -dest)]
+head(ans, 10)
+
+ans = flights[, .N, .(dep_delay>0, arr_delay>0)]
+ans
+
+#to apply a function to multiple columns
+DT = data.table(ID = c("b","b","b","a","a","c"), a = 1:6, b = 7:12, c=13:18)
+DT[, lapply(.SD, mean), by=ID]
+
+flights[carrier == "AA",                     # Only on trips with carrier "AA"
+        lapply(.SD, mean),                   # compute the mean
+        by=.(origin, dest, month),           # for every 'origin,dest,month'
+        .SDcols=c("arr_delay", "dep_delay")] # for just those specified in .SDcols
+
+ans = flights[, head(.SD, 2), by=month]
+head(ans)
+
+#flexibility in 'j'
+DT[, .(val = c(a,b)), by=ID]        # convert from wide to narrow
+
+DT[, .(val = list(c(a,b))), by=ID]  # less practically useful
+
+DT[, print(c(a,b)), by=ID]
+DT[, print(list(c(a,b))), by=ID]
+```
+
+The general form of data.table syntax is:
+
+  DT[i, j, by]
+
+We have seen so far that,
+ 
+  Using 'i':
+  We can subset rows similar to a data.frame - except you don't have to use DT$ repetitively since columns within the frame of a data.table are seen as if they are variables.
+  We can also sort a data.table using order(), which internally uses data.table's fast order for performance.
+  We can do much more in i by keying a data.table, which allows blazing fast subsets and joins. We will see this in the "Keys and fast binary search based subsets" and "Joins and rolling joins" vignette.
+  Using 'j':
+   Select columns the data.table way: DT[, .(colA, colB)].
+   Select columns the data.frame way: DT[, c("colA", "colB"), with=FALSE].
+  Compute on columns: DT[, .(sum(colA), mean(colB))].
+  Provide names if necessary: DT[, .(sA =sum(colA), mB = mean(colB))].
+  Combine with i: DT[colA > value, sum(colB)].
+  Using 'by':
+   Using `by`, we can group by columns by specifying a list of columns or a character vector of column names or even expressions. The flexibility of j, combined with by and i makes for a very powerful syntax.
+  `by` can handle multiple columns and also expressions.
+  We can keyby grouping columns to automatically sort the grouped result.
+  We can use .SD and .SDcols in j to operate on multiple columns using already familiar base functions. Here are some examples:
+   
+   DT[, lapply(.SD, fun), by=., .SDcols=...] - applies fun to all columns specified in .SDcols while grouping by the columns specified in by.
+   DT[, head(.SD, 2), by=.] - return the first two rows for each group.
+   DT[col > val, head(.SD, 1), by=.] - combine i along with j and by.
+
+## Keys and 'fast binary search'-based subset
+
+### Keys and matching
+```{r}
+set.seed(1L)
+DF = data.frame(ID1 = sample(letters[1:2], 10, TRUE), 
+                ID2 = sample(1:3, 10, TRUE),
+                val = sample(10), 
+                stringsAsFactors = FALSE,
+                row.names = sample(LETTERS[1:10]))
+DF
+rownames(DF)
+
+DF["C", ]
+
+DT = as.data.table(DF)
+DT
+rownames(DT)
+
+setkey(flights, origin)
+head(flights)
+
+flights[.("JFK")]
+
+key(flights)
+
+setkey(flights, origin, dest)
+head(flights)
+
+key(flights)
+
+flights[.("JFK", "MIA")]
+
+flights[.("JFK")]                  # subset first key for 'JFK'
+flights[.(unique(origin), "MIA")]  # subset just the second key for 'MIA'
+```
+
+### Keys and 'j'
+```{r}
+flights[.("LGA", "TPA"), .(arr_delay)]
+
+flights[.("LGA", "TPA"), .(arr_delay)][order(-arr_delay)]
+
+flights[.("LGA", "TPA"), max(arr_delay)]
+
+flights[, sort(unique(hour))]
+
+setkey(flights, hour)
+key(flights)
+flights[.(24), hour := 0L]
+key(flights)
+
+flights[, sort(unique(hour))]
+
+setkey(flights, origin, dest)
+key(flights)
+
+ans = flights["JFK", max(dep_delay), keyby=month]
+head(ans)
+
+key(ans)
+```
+
+### Using 'mult' and 'nomatch'
+```{r}
+flights[.("JFK", "MIA"), mult="first"]
+
+flights[.(c("LGA", "JFK", "EWR"), "XNA"), mult="last"]
+
+flights[.(c("LGA", "JFK", "EWR"), "XNA"), mult="last", nomatch = 0L]
+```
+
+### Comparing 'binary search' and 'vector scan'
+```{r}
+flights[.("JFK", "MIA")]
+
+flights[origin == "JFK" & dest == "MIA"]
+
+set.seed(2L)
+N = 2e7L
+DT = data.table(x = sample(letters, N, TRUE), 
+                y = sample(1000L, N, TRUE), 
+                val=runif(N), key = c("x", "y"))
+print(object.size(DT), units="Mb")
+
+key(DT)
+
+#vector scan approach
+t1 <- system.time(ans1 <- DT[x == "g" & y == 877L])
+t1
+head(ans1)
+
+dim(ans1)
+
+#using keys
+t2 <- system.time(ans2 <- DT[.("g", 877L)])
+t2
+head(ans2)
+
+dim(ans2)
+
+identical(ans1$val, ans2$val)
+```
+
+Vector scan approach:
+  The column x is searched for the value "g" row by row, on all 20 million of them. 
+  This results in a logical vector of size 20 million, with values TRUE, FALSE or NA corresponding to x's value. Similarly, the column y is searched for 877 on all 20 million rows one by one, and stored in another logical vector. Element wise & operations are performed on the intermediate logical vectors and all the rows where the expression evaluates to TRUE are returned. This is what we call a vector scan approach. And this is quite inefficient, especially on larger tables and when one needs repeated subsetting, because it has to scan through all the rows each time.
+ 
+Binary search approach:
+  Here's a very simple illustration. Let's consider the (sorted) numbers shown below:
+   1, 5, 10, 19, 22, 23, 30
+ 
+  Suppose we'd like to find the matching position of the value 1, using binary search, this is how we would proceed - because we know that the data is sorted.
+   Start with the middle value = 19. Is 1 == 19? No. 1 < 19.
+   Since the value we're looking for is smaller than 19, it should be somewhere before 19. So we can discard the rest of the half that are >= 19.
+   Our set is now reduced to 1, 5, 10. Grab the middle value once again = 5. 
+   Is 1 == 5? No. 1 < 5.
+   Our set is reduced to 1. Is 1 == 1? Yes. The corresponding index is also 1. 
+   And that's the only match.
+   
+  A vector scan approach on the other hand would have to scan through all the values (here, 7).
+
+## Reference Semantics
+
+### Referencing
+```{r}
+DF = data.frame(ID = c("b","b","b","a","a","c"), a = 1:6, b = 7:12, c=13:18)
+DF
+
+DF$c = 18:13 # replace entire column
+DF$c[DF$ID == "b"] = 15:13
+DF
+
+#add columns by reference (speed and total delay of each flight)
+flights[, `:=`(speed = distance / (air_time/60), # speed in km/hr
+               delay = arr_delay + dep_delay)]   # delay in minutes
+head(flights)
+
+flights[, c("speed", "delay") := list(distance/(air_time/60), arr_delay + dep_delay)]
+
+flights[, sort(unique(hour))]
+flights[hour == 24L, hour := 0L]
+
+flights[, c("delay") := NULL] # delete column by reference
+head(flights)
+
+flights[, `:=`(delay = NULL)]
+
+flights[, max_speed := max(speed), by=.(origin, dest)]
+head(flights)
+
+#mutliple columns using ':='
+in_cols  = c("dep_delay", "arr_delay")
+out_cols = c("max_dep_delay", "max_arr_delay")
+flights[, c(out_cols) := lapply(.SD, max), by = month, .SDcols = in_cols]
+head(flights)
+```
+

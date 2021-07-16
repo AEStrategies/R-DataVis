@@ -1,0 +1,130 @@
+---
+title: "Data Wrangling"
+output: 
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+  html_notebook:
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: yes
+    df_print: paged
+    theme: darkly
+---
+# Set up environment
+
+As always, clean the environment, clear the workspace and console. Be sure you're prepared to do this!!
+
+```{r results = FALSE, message = FALSE}
+#Clear the workspace
+rm(list=ls())
+
+#Clear the console
+cat("\014")
+```
+
+And, again, we'll need to read in our packages from their libraries, and set our working directory.
+
+```{r results = FALSE, message = FALSE}
+#Include necessary libraries
+x = c('rstudioapi',
+      'tidyverse')
+
+# # If you don't know if you've installed the packages for some of these
+# # libraries, run this:
+# install.packages(x)
+
+lapply(x, library, character.only=TRUE)
+rm(x)
+
+#Set working directory (should be universal)
+setwd(
+  dirname(
+    rstudioapi::callFun(
+      'getActiveDocumentContext'
+    )$path
+  )
+)
+```
+
+<!-- If you end up getting a warning about pdfcrop, you can install it thusly: -->
+
+```{r include = FALSE}
+# tinytex::tlmgr_install("pdfcrop")
+```
+
+# Aggregate data
+
+Because the Theoph data we'll use later is already nice and clean it doesn't help us learn to clean! So, we're going back to the COVID-19 Data from Johns Hopkins University (JHU)
+
+```{r}
+jhu_url = paste("https://raw.githubusercontent.com/CSSEGISandData/",
+                "COVID-19/master/csse_covid_19_data/", 
+                "csse_covid_19_time_series/",
+                "time_series_covid19_confirmed_US.csv", 
+                sep = "")
+```
+
+# Wrangling data with `dplyr`
+
+The essential feature to the following steps is the piping command: `%>%`. The data management grammar is evident in the functions piped together with this structure. We demonstrate filtering, selecting, mutating, arranging, summarizing, and reshaping (pivoting) below.
+
+```{r message = FALSE}
+us_confirmed_long_jhu = read.csv(jhu_url) %>%
+  
+  # Rename columns for more informative/pertinent reference
+  dplyr::rename(state_name = "Province_State",
+                country_region = "Country_Region",
+                Long = "Long_",
+                county_name = "Admin2",
+                county_fips = "FIPS") %>% 
+  
+  # Reorganize the table to "long" version for merging later, using cases by day. We're excluding unnecessary columns from this action (everhting concatenated (`c()`) after the `!`). We define the name of the new condensed column for dates and the column for cumulative cases on that date.
+  pivot_longer(!c(UID,
+                  iso2,
+                  iso3,
+                  code3,
+                  county_fips,
+                  county_name,
+                  Combined_Key,
+                  state_name,
+                  country_region, 
+                  Lat, 
+                  Long), 
+               names_to = "Date", 
+               values_to = "cumulative_cases") %>%
+  
+  # Adjust JHU dates back one day to reflect US time, more or less, because the data are in GMT since they are, originally, global.
+  mutate(Date = lubridate::mdy(Date) - lubridate::days(1)) %>%
+  
+  # Select only US states, not Canada provinces or any territories
+  filter(country_region == "US") %>% 
+  
+  # Sort the data by state and date so it flows temporally and alphabetically
+  arrange(state_name, Date) %>% 
+  
+  # Group the data by county, so further actions will occur on the groups.
+  group_by(county_fips) %>% 
+  
+  # Calculate incident cases per day, rather than cumulative count. We use the `diff()` function to vectorize the difference (similar to the vectorized function `sum()`).
+  mutate(incident_cases = c(0, diff(cumulative_cases))) %>%
+  
+  # Ungroup by county to initiate a new mutation
+  ungroup() %>% 
+  
+  # Select only columns of interest (not country, latitude, nor longitude)
+  dplyr::select(-c(country_region, Lat, Long)) %>% 
+  
+  # Ensure we have no negative incident case records
+  mutate(incident_cases = ifelse(incident_cases<0,0,incident_cases)) %>%
+  
+  # Group by week for summarized data (comment-out for days)
+  group_by(week = strftime(Date, format = "%Y-W%V"),
+           county_fips) %>% 
+  
+  # Summarize data by week
+  mutate(wk_incident_cases = sum(incident_cases))
+
+us_confirmed_long_jhu
+```

@@ -1,0 +1,168 @@
+---
+title: "Data Cleansing"
+output: 
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+  html_notebook:
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: yes
+    df_print: paged
+    theme: darkly
+---
+# Set up environment
+
+As before, we want to start with a clean environment, so we clear our workspace and console. Again, be sure you're prepared to do this!!
+
+```{r results = FALSE, message = FALSE}
+#Clear the workspace
+rm(list=ls())
+
+#Clear the console
+cat("\014")
+```
+
+As promised, we will again need to read in our packages from their libraries, and set our working directory. 
+
+```{r results = FALSE, message = FALSE}
+#Include necessary libraries
+x = c('rstudioapi',
+      'tidyverse',
+      'data.table')
+
+# # If you don't know if you've installed the packages for some of these
+# # libraries, run this:
+# install.packages(x)
+
+lapply(x, library, character.only=TRUE)
+rm(x)
+
+#Set working directory (should be universal)
+setwd(
+  dirname(
+    rstudioapi::callFun(
+      'getActiveDocumentContext'
+    )$path
+  )
+)
+```
+
+If you end up getting a warning about pdfcrop, you can install it thusly:
+
+```{r results = FALSE, message = FALSE}
+# tinytex::tlmgr_install("pdfcrop")
+```
+
+# Aggregate data
+
+Because the Theoph data we'll use later is already nice and clean it doesn't help us learn to clean! So, we're going back to the COVID-19 Data from Johns Hopkins University (JHU)
+
+```{r include = FALSE}
+jhu_url = paste("https://raw.githubusercontent.com/CSSEGISandData/",
+                "COVID-19/master/csse_covid_19_data/", 
+                "csse_covid_19_time_series/",
+                "time_series_covid19_confirmed_US.csv", 
+                sep = "")
+
+# Read in the data from the site
+us_confirmed_long_jhu = read.csv(jhu_url)
+```
+
+# Examine the data's structure
+
+We got the data in from the website again. Great! We're getting good at this.
+
+First things first, we want to take a look at the data to see what it looks like. How many columns, rows, what are the field types, etc. We use `str()` for this.
+
+```{r message = FALSE}
+str(us_confirmed_long_jhu)
+```
+
+Whoa. That's a lot. We can't even see the top without scrolling up! Let's take a look at the dimensions, and see the headers.
+
+```{r message = FALSE}
+dim(us_confirmed_long_jhu)
+```
+
+Okay. 545 columns, 3,342 rows. No wonder we couldn't see it all! Let's not look at all 545 column names, since most of them look like dates. Let's look at the first few.
+
+```{r message = FALSE}
+names(us_confirmed_long_jhu)[1:15]
+```
+
+Great. We made it to the date columns. Good to know what's in there. We know the date columns indicate the number of COVID-19 cases on that day in that county. What about the others? They don't make much sense. Let's rename some, and also get rid of others we don't need.
+
+# Renaming columns
+
+```{r message = FALSE}
+# UID, iso2, iso3, and code3 all contain information about countries (USA or Canada, in our case). This information is duplicated in the `Country_Region` column. We can get rid of these.
+us_confirmed_long_jhu[c(1:4)] = list(NULL) 
+
+# Now let's see what we're left with.
+names(us_confirmed_long_jhu)[1:10]
+
+# These are all adminstrative codes or names that help us identify our counties, the states and countries in which the reside, and their coordinates. Let's rename them so they make more sense. Let's also get that rogue underscore out of the `Long` column!
+
+names(us_confirmed_long_jhu)[c(1:4,6)] = c("county_fips",
+                                           "county_name",
+                                           "state_name",
+                                           "country_region",
+                                           "Long") 
+
+# Okay! Great progress! Let's see what we have now.
+
+names(us_confirmed_long_jhu)[1:10]
+```
+
+This is a lot better. We have less noise, and we can immediately understand what's left. Now, let's see if there are any missing data.
+
+# Missing data
+
+```{r message = FALSE}
+# Get all columns with "X" in the name, these are the date columns
+case_cols = names(us_confirmed_long_jhu)[grep("X", names(us_confirmed_long_jhu))]
+
+# Find out which counties never had any data reported. These are likely missing data points (could be unpopulated counties, but unlikely!).
+missing_counties = which(rowSums(us_confirmed_long_jhu[case_cols]) == 0)
+
+missing_counties
+```
+
+Great, looks like 65 counties that had no cases reported. For our practice-purposes, let's pretend that's "no data" and get those out of there.
+
+```{r message = FALSE}
+us_confirmed_long_jhu = 
+  us_confirmed_long_jhu[which(!us_confirmed_long_jhu$Combined_Key %in% us_confirmed_long_jhu[missing_counties,"Combined_Key"]),]
+
+```
+
+So, we grabbed all of the county names (`Combined_Key`) that had missing data (`missing_counties`) from the data (`us_confirmed_long_jhu`) and pulled them out (the `!` means, take the data that are **not** like the proceeding logical argument). 
+
+Cool! Missing data removed! If we were really really sure there should have been data there (and that those are not just counties from the Aleutian Islands with no one in them) and we had a good reason to want to keep it, we could do some cool stuff to impute the data in those counties. We could do population-weighted mean cases per county and fill in our "missing" counties' data with the values they are modeled to be closest to. Let's keep things simple for now and just remove the data :).
+
+# Summarize columns
+
+Okay, let's pretend we're only after total cases per county since the beginning of the pandemic.
+
+```{r message = FALSE}
+# Calculate the row-wise summation of cases. We have to make sure we only using the numerical case columns as defined above (`case_cols`)!
+us_confirmed_long_jhu$total_cases = rowSums(us_confirmed_long_jhu[case_cols])
+```
+
+Very nice!
+
+# Remove columns
+
+Now, since we have what we were after, let's get rid of all of the unnecessary date columns.
+
+```{r message = FALSE}
+# Delete all the date columns. `ncol` is a counter of columns in the data frame. Subtracting one from this total makes sure we don't get rid of the column we just made!
+us_confirmed_long_jhu[8:(ncol(us_confirmed_long_jhu) - 1)] = list(NULL)
+
+# Let's take a look at our new, cleaned data.
+head(us_confirmed_long_jhu)
+```
+
+Wow, we're really cooking now! This looks great!

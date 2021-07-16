@@ -1,0 +1,271 @@
+---
+title: "Data Visualization"
+output: 
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+  html_notebook:
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: yes
+    df_print: paged
+    theme: darkly
+---
+# Set up environment
+
+Clean the environment, clear the workspace and console... etc.
+
+```{r results = FALSE, message = FALSE}
+#Clear the workspace
+rm(list=ls())
+
+#Clear the console
+cat("\014")
+```
+
+Always need to read in our packages from their libraries, and set our working directory!
+
+```{r results = FALSE, message = FALSE}
+#Include necessary libraries
+x = c('rstudioapi',
+      'viridis',
+      'tidyverse')
+
+# # If you don't know if you've installed the packages for some of these
+# # libraries, run this:
+# install.packages(x)
+
+lapply(x, library, character.only=TRUE)
+rm(x)
+
+#Set working directory (should be universal)
+setwd(
+  dirname(
+    rstudioapi::callFun(
+      'getActiveDocumentContext'
+    )$path
+  )
+)
+```
+
+<!-- If you end up getting a warning about pdfcrop, you can install it thusly: -->
+
+```{r include = FALSE}
+# tinytex::tlmgr_install("pdfcrop")
+```
+
+# Get data
+
+We'll finally get in to the Theophylline data!
+
+These data come from Boeckmann, A. J., Sheiner, L. B. and Beal, S. L. (1994), NONMEM Users Guide: Part V, NONMEM Project Group, University of California, San Francisco.
+
+They are from 12 patients given an anti-asthmatic drug (theophylline)
+
+```{r include = FALSE}
+data(Theoph)
+```
+
+# `ggplot2`
+
+Let's plot the data with `ggplot2`. The structure here has echoes of the piping operations from `dplyr`, but the grammar of graphics is a world unto itself. `ggplot2` takes care of an enormous amount of overhead for us, and we just have to string together the basic components. 
+
+We'll start at the most basic. A scatterplot of the data.
+
+## Basic plotting
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc,
+           col = Subject)) +
+  geom_point()
+```
+
+What we just made shows concentration observations for each Subject (patient). There are three important elements to this plot.
+
+First, we had to tell `ggplot` what data to use. We set `data` equal to `Theoph`. Next, we had to tell `ggplot` **what** to plot -- the aesthetics. We set and x and y-axis: time and concentration, respectively. Finally, we had to tell `ggplot` **how** to plot it. We told it to use a point geometry, for a scatterplot.
+
+### Facets
+
+Let's change things one at a time. First, let's explore moire layers in the `ggplot` world.
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc)) +
+  geom_point() +
+  facet_wrap( ~ Subject)
+```
+
+Here, we've added a new layer of graph grammar: facets. These define panels in the plot. We supplied a grouping variable, Subject, so we can see each patient on their own. All of the other layers are still there: data, aesthetics, and geometry. With one little argument, we completely changed the look of the figure.
+
+Okay, let's keep going.
+
+### Statsitics
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc,
+           sample = Dose)) +
+  geom_point() +
+  facet_wrap( ~ Subject) +
+  stat_qq_line()
+```
+
+Here we have added a statistic. This one is not terribly descriptive, as it simply plots a line at the specified sample (here, sample is `Dose`). This line is a qq-line, which should compute the quantile-quantile regression slope and intercept. Of course, here, we have none of that to calculate, so it just shows the point. Handy for reference, perhaps. But, we can see the addition of the statistic layer.
+
+Let's try another layer.
+
+### Coordinates
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc,
+           sample = Dose)) +
+  geom_point() +
+  facet_wrap( ~ Subject) +
+  stat_qq_line() +
+  coord_flip()
+```
+
+Now we've added a coordinates layer. We instructed `ggplot` to "flip" the coordinates, so the x-axis is sent to the y-axis, and vice-versa. As before, this is not super meaningful from a biological perspective, but we're trying to demonstrate the functionality.
+
+Let's add one last layer.
+
+### Theme
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc,
+           sample = Dose)) +
+  geom_point() +
+  facet_wrap( ~ Subject) +
+  stat_qq_line() +
+  coord_flip() +
+  theme_classic()
+```
+
+Now we've changed the color theme of the entire graphic to the "classic" style. This removes some unnecessary graphical noise (graph lines, gray backgrounds, etc.). 
+
+## Adding other geometries
+
+That's it, the full suite of layers `ggplot` interprets. We can add and remove these layers as we desire, and include more versions of them. For example, we can add a line geometry. 
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc,
+           sample = Dose)) +
+  geom_smooth(method = "lm",
+              se = FALSE) +
+  geom_point() +
+  facet_wrap( ~ Subject) +
+  stat_qq_line() +
+  coord_flip()
+```
+
+This added a line geometry, a modeled regression curve fit to the data. A straight line doesn't make any sense for these data, a non-linear model fit would be much better. But we have enough to go over and don't need to drift to far into statistics here. We want you to be able to focus on the essentials!
+
+## Bar-plot
+
+Okay, let's strip out some layers so we can just look at different graph types.
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Subject,
+           y = Wt)) +
+  geom_bar(stat = "identity",
+           position = "dodge")
+```
+
+Okay, technically we still have a stat layer in there, but that is just to tell the bar-plot geometry to plot the "identity" of the data, not to summarize it at all. So the statistic argument just set the data to the given value. Not much of a stat!
+
+The important part is we can now see a bar-plot here. The height of the bars indicates the weight of the patients. Cool!
+
+## Histogram
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Wt)) +
+  geom_histogram()
+```
+
+Now we have a special bar-plot, a histogram. This shows us the frequency of data points across a variable, here, weight. This shows us how many subjects fall into each weight class. There's a message given about the default bin-width that the function selected. That default was just fine for us. But, if wanted to control it and change it for some reason, we're directed as to how to do that: pick a better "binwidth" value.
+
+Moving on!
+
+## Line-plot
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc,
+           col = Subject)) +
+  geom_line()
+```
+
+Now we've gone back to the original plot style, but we connected the points rather than allowing them to stay scattered. So, it's a line plot! Pretty basic. If we group all subjects together, we can see a boxplot of the distribution of concetrations over time.
+
+## Box-plot
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc,
+           group = Time)) +
+  geom_boxplot()
+```
+
+Hard to see the boxes at each time stamp, but we can see the general trend of changing concentration over time, and the dispersion of points across patients. We can get a better sense of the parts of a boxplot if we zoom in and remove the grouping.
+
+```{r}
+ggplot(data = Theoph,
+       aes(x = Time,
+           y = conc)) +
+  geom_boxplot()
+```
+
+Here we can see that warning about not assigning a group. Did we forget? No, we meant to! This shows us the median (the line, the 50th percentil), the box (the 25th and 75th percentile marks, the span of which defines the interquartile range), the whiskers (the 25th and 75th percentiles +/- 1.5 times the interquartile range, IQR), and the outliers, things beyond the percentiles +/- 1.5 times the IQR. 
+
+Whoa, steered into some stats there. We can slowly back away confident that we can create a boxplot when necessary.
+
+Let's do one last one. One we've seen before!
+
+## Heatmap
+
+```{r}
+library(data.table)
+
+preassessment_dt = data.table(
+  Topic = c("R", "RStudio", "Shiny", "ggplot", "Spark", "Programming", "SQL", "Notebooks",
+            "Data Cleaning", "NLP", "Statistics", "Descriptive Analytics", "Predicitive Analytics",
+            "Prescriptive Analytics", "Deep Learning", "Quality Metrics", "Data Visualization"),
+  None       = c(7, 6, 12, 7, 16, 8, 15, 16, 7, 16,  1, 4, 10, 14, 17, 15, 6),
+  Beginner   = c(8, 8,  5, 7,  1, 6,  2,  1, 8,  1, 10, 7,  3,  1,  0,  2, 8),
+  Competent  = c(2, 3,  0, 2,  0, 3,  0,  0, 1,  0,  5, 6,  4,  2,  0,  0, 3),
+  Proficient = c(0, 0,  0, 0,  0, 0,  0,  0, 0,  0,  1, 0,  0,  0,  0,  0, 0),
+  Expert     = c(0, 0,  0, 0,  0, 0,  0,  0, 0,  0,  0, 0,  0,  0,  0,  0, 0)
+)
+
+preassessment_melt = data.table::melt(
+  preassessment_dt,
+  id.vars = "Topic",
+  value.name = "Count",
+  variable.name = "Proficiency"
+)
+
+ggplot(preassessment_melt, 
+       aes(x = Proficiency, 
+           y = Topic, 
+           fill = Count)) + 
+  geom_tile() +
+  scale_fill_viridis_c(option = "magma") + 
+  theme_classic()
+```
+
+Hey! It's the chart we saw from the pre-course assessment! This is a heatmap. We made it with the data we supplied, and with the proper aesthetics, and a "tile" geometry. We even changed the theme and color scheme! We're getting pretty good here, and starting to understand the basics of some things that seemed really unfamiliar just yesterday. That's great progress.

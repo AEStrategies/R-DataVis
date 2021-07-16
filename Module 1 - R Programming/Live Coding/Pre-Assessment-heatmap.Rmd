@@ -1,0 +1,42 @@
+---
+title: "Intro to R Pre-assessment visualizations"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(ggplot2)
+library(data.table)
+
+# Populate the pre-assessment data table
+preassessment_dt = data.table(
+  Topic = c("R", "RStudio", "Shiny", "ggplot", "Spark", "Programming", "SQL", "Notebooks",
+            "Data Cleaning", "NLP", "Statistics", "Descriptive Analytics", "Predicitive Analytics",
+            "Prescriptive Analytics", "Deep Learning", "Quality Metrics", "Data Visualization"),
+  None       = c(7, 6, 12, 7, 16, 8, 15, 16, 7, 16,  1, 4, 10, 14, 17, 15, 6),
+  Beginner   = c(8, 8,  5, 7,  1, 6,  2,  1, 8,  1, 10, 7,  3,  1,  0,  2, 8),
+  Competent  = c(2, 3,  0, 2,  0, 3,  0,  0, 1,  0,  5, 6,  4,  2,  0,  0, 3),
+  Proficient = c(0, 0,  0, 0,  0, 0,  0,  0, 0,  0,  1, 0,  0,  0,  0,  0, 0),
+  Expert     = c(0, 0,  0, 0,  0, 0,  0,  0, 0,  0,  0, 0,  0,  0,  0,  0, 0)
+)
+preassessment_dt
+```
+
+```{r}
+# Convert (melt) the wide data table to a long data table to prepare the data for ggplot
+preassessment_melt = data.table::melt(
+  preassessment_dt,
+  id.vars = "Topic",
+  value.name = "Count",
+  variable.name = "Proficiency"
+)
+preassessment_melt
+```
+```{r}
+# ggplot heatmap using the melted (long) table and applying the "classic" theme
+ggplot(preassessment_melt, aes(x = Proficiency, y = Topic, fill = Count)) + geom_tile() +
+  scale_fill_viridis_c(option = "magma") + theme_classic()
+```

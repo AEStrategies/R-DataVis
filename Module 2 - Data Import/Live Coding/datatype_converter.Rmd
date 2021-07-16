@@ -1,0 +1,310 @@
+---
+title: "Importing Data"
+output: 
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+  html_notebook:
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: yes
+    df_print: paged
+    theme: darkly
+---
+# Set up environment
+
+First, we want to start with a clean environment, so we clear our workspace and console. If you've been doing important stuff in R and you clear these you'll lose your work, so be sure you're ready!!
+
+```{r results = FALSE, message = FALSE}
+#Clear the workspace
+rm(list=ls())
+
+#Clear the console
+cat("\014")
+```
+
+We'll need to read in our packages from their libraries, and set our working directory. Get used to this step, it's almost always necessary!
+
+```{r results = FALSE, message = FALSE}
+#Include necessary libraries
+x = c('rstudioapi',
+      'tidyverse',
+      'data.table',
+      'sparklyr',
+      'xlsx',
+      'xml2')
+
+# # If you don't know if you've installed the packages for some of these
+# # libraries, run this:
+# install.packages(x)
+
+lapply(x, library, character.only=TRUE)
+rm(x)
+
+#Set working directory (should be universal)
+setwd(
+  dirname(
+    rstudioapi::callFun(
+      'getActiveDocumentContext'
+    )$path
+  )
+)
+```
+
+# Aggregate data
+
+We need to get some data to work with. So, we'll collect COVID-19 Data from Johns Hopkins University (JHU), as it's freely available and well structured. We're just reading things in in this module, so we want to keep it simple. 
+
+This has been done already, and the data made available in the repo, so no need to actually run this unless you want to see the sausage get made. We'll look into more in the Introduction to `dplyr` later.
+
+```{r include = FALSE}
+# jhu_url = paste("https://raw.githubusercontent.com/CSSEGISandData/",
+#                 "COVID-19/master/csse_covid_19_data/", 
+#                 "csse_covid_19_time_series/",
+#                 "time_series_covid19_confirmed_US.csv", 
+#                 sep = "")
+# 
+# # Read in the data from the site
+# us_confirmed_long_jhu = read_csv(jhu_url) %>% 
+#   # Rename columns for more informative/pertinent reference
+#   dplyr::rename(state_name = "Province_State",
+#                 country_region = "Country_Region",
+#                 Long = "Long_",
+#                 county_name = "Admin2",
+#                 county_fips = "FIPS") %>% 
+#   # Reorganize the table to "long" version for merging later, using cases by day
+#   pivot_longer(!c(UID,iso2,iso3,code3,county_fips,county_name,Combined_Key,
+#                   state_name,country_region, Lat, Long), 
+#                names_to = "Date", 
+#                values_to = "cumulative_cases") %>%
+#   # Adjust JHU dates back one day to reflect US time, more or less
+#   mutate(Date = lubridate::mdy(Date) - lubridate::days(1)) %>% 
+#   # Select only US states, not Canada provinces or any territories
+#   filter(country_region == "US") %>% 
+#   # Sort the data by state and date
+#   arrange(state_name, Date) %>% 
+#   # Group the data by county
+#   group_by(county_fips) %>% 
+#   # Calculate incident cases per day, rather than cumulative count
+#   mutate(incident_cases = c(0, diff(cumulative_cases))) %>% 
+#   # Ungroup by county for new summarization
+#   ungroup() %>% 
+#   # Select only columns of interest
+#   dplyr::select(-c(country_region, Lat, Long)) %>% 
+#   # Ensure no negative incident case records
+#   mutate(incident_cases = ifelse(incident_cases<0,0,incident_cases)) %>%
+#   # Group by week for summarized data (comment-out for days)
+#   group_by(week = strftime(Date, format = "%Y-W%V"),
+#            county_fips) %>% 
+#   # Summarize data by week
+#   mutate(wk_incident_cases = sum(incident_cases))
+# 
+# us_confirmed_long_jhu_sbst = us_confirmed_long_jhu %>%
+#   filter(Date == "2021-05-17")
+```
+
+# Produce different file structures as examples
+
+This is another section we've completed for you. We want to know how to **read** data in. If we were already at data writing/saving, you already would know how to read it in! Just be confident we're getting the data into all of the file types in this section. Read at your own risk.
+
+```{r include = FALSE}
+# Set JAVA_HOME path
+Sys.setenv(JAVA_HOME='C:/Program Files/Java/jre1.8.0_291')
+
+# # Save .avro, .csv, .json, .orc, and .parquet files
+# sc = spark_connect(master = "local",
+#                    version = "2.4.3",
+#                    packages="org.apache.spark:spark-avro_2.11:2.4.3")
+# 
+# spark_df = copy_to(dest = sc,
+#                    df = us_confirmed_long_jhu_sbst,
+#                    overwrite = TRUE)
+# 
+# temp_avro = tempfile(fileext = ".avro")
+# spark_write_avro(x = spark_df,
+#                  path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_avro.avro")
+# 
+# temp_csv = tempfile(fileext = ".csv")
+# spark_write_csv(x = spark_df,
+#                 path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_scsv.csv")
+# 
+# temp_json = tempfile(fileext = ".json")
+# spark_write_json(x = spark_df,
+#                  path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_json.json")
+# 
+# temp_orc = tempfile(fileext = ".orc")
+# spark_write_orc(x = spark_df,
+#                 path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_orc.orc")
+# 
+# temp_parquet = tempfile(fileext = ".parquet")
+# spark_write_parquet(x = spark_df,
+#                     path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_parquet.parquet")
+# 
+# spark_disconnect(sc)
+# 
+# # Save .sas and .xlsx files
+# haven::write_sas(us_confirmed_long_jhu_sbst,
+#                  "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_sas.sas")
+# 
+# xlsx::write.xlsx(as.data.frame(us_confirmed_long_jhu_sbst),
+#                  "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_excel.xlsx",
+#                  row.names = FALSE)
+# 
+# # Save .xml file
+# library(XML)
+# us_confirmed_long_jhu_df = as.data.frame(us_confirmed_long_jhu_sbst)
+# 
+# xml = xmlTree()
+# xml$addTag("document", close=FALSE)
+# for (i in 1:nrow(us_confirmed_long_jhu_df)) {
+#   xml$addTag("row", close=FALSE)
+#   for (j in names(us_confirmed_long_jhu_df)) {
+#     xml$addTag(j, us_confirmed_long_jhu_df[i, j])
+#   }
+#   xml$closeTag()
+# }
+# xml$closeTag()
+# 
+# write_xml(xml,
+#         "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_xml.xml")
+```
+
+# Read in different file structures
+
+## Spark
+
+Here is where we finally start to read things in. We'll start with data that may be too big to bring in to R. The go-to system for this these days is usually Apache Spark. So, first, we have to connect to Spark (although, these data are actually stored locally... but this is just for demonstration).
+
+```{r}
+# Connect to Spark
+sc = spark_connect(master = "local",
+                   version = "2.4.3",
+                   packages="org.apache.spark:spark-avro_2.11:2.4.3")
+```
+
+Now that we've made our connection, we can tell R to go in and look for the data we want to manipulate. These data will only be accessible to us while our connection is active. R does not brign these in to its active memory. This is good! If R did bring them in, it would likely crash. The whole point of Spark is to let us store huge datasets we can't save locally on our machines. We don't want R trying to bring all that data in. This lets R identify the meta-data, the structure, of the datasets we're interested in. That's all that is held in memory here.
+
+### AVRO, JSON, ORC, PARQUET
+
+```{r echo = FALSE, message = FALSE}
+# .avro
+avro_df = spark_read_avro(sc,
+                          path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_avro.avro")
+
+avro_df
+
+# .json
+json_df = spark_read_json(sc,
+                          path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_json.json")
+
+json_df
+
+# .orc
+orc_df = spark_read_orc(sc,
+                        path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_orc.orc")
+
+orc_df
+
+# .parquet
+parquet_df = spark_read_parquet(sc,
+                                path = "F:/AEStrategies/fda/binder/Module 2 - Data Import/Live Coding/data/covid19_parquet.parquet")
+
+parquet_df
+```
+
+So now we have connections to data stored outside of R for AVRO, JSON, ORC, and PARQUET files. If you've never heard of these extensions, that's fine. Our goal here is to convince you of the power of R. If you happen to come across these in the future, or think you may have utility for Big Data solutions like Spark, now you know you can handle them in R!
+
+The second we run the below code, we lose our connection and access to the data. We'll still have the meta-data stored in R's memory, but we won't be able to see or do anything with the actual data.
+
+```{r}
+# Disconnect from Spark
+spark_disconnect(sc)
+```
+
+Let's get into the meat of what you likely deal with on a day-to-day basis. Below we grab data from local sources saved as CSVs, XLSX, SAS, and XML files. These are straightforward, and will create data.frames (of one type or another) saved **in R's active memory**. They will be a part of your current environment, and you will be able to see and mess with them.
+
+### CSV
+
+```{r echo = FALSE, message = FALSE}
+# .csv
+csv_df = read.csv("./data/covid19_csv.csv")
+
+head(csv_df)
+```
+
+### Excel (XLSX)
+
+```{r echo = FALSE, message = FALSE}
+# .xlsx
+excel_df = read.xlsx("./data/covid19_excel.xlsx",
+                     sheetIndex = 1)
+
+head(excel_df)
+```
+
+Base R's CSV and XLSX readers will bring in the data as a basic data.frame. No special syntax or care given to the data, just as-is. If you print it, you'll see it all. This tends to clog your console really well :). 
+
+Here, we've asked R to just show us the header of the data, the first 6 rows.
+
+Now, let's move on to SAS and XML.
+
+### SAS
+
+```{r echo = FALSE, message = FALSE}
+# .sas
+sas_df = haven::read_sas("./data/covid19_sas.sas")
+
+sas_df
+```
+
+#### `tibble`s
+
+This was read in automatically by `haven`'s SAS reader as a `tibble`. A `tibble` is just a kind of data.frame, but R treats them differently and works with them more efficiently. This is great, for a number of reasons:
+
+1.`tibble` displays data along with data type while displaying whereas data frame does not. 
+
+2. `tibble` fetches data using data source in its original form instead of data frame such factors, characters or numeric. 
+
+3. `tibble` is stricter than data frames in subsetting or slicing.
+
+### XML
+
+Okay, let's wrap up with XML.
+
+```{r echo = FALSE, message = FALSE}
+# .xml
+xml_doc = read_xml("./data/covid19_xml.xml")
+
+UID = xml_text(xml_find_all(xml_doc, xpath = "//UID"))
+iso2 = xml_text(xml_find_all(xml_doc, xpath = "//iso2"))
+iso3 = xml_text(xml_find_all(xml_doc, xpath = "//iso3"))
+code3 = xml_text(xml_find_all(xml_doc, xpath = "//code3"))
+county_fips = xml_text(xml_find_all(xml_doc, xpath = "//county_fips"))
+county_name = xml_text(xml_find_all(xml_doc, xpath = "//county_name"))
+state_name = xml_text(xml_find_all(xml_doc, xpath = "//state_name"))
+Combined_Key = xml_text(xml_find_all(xml_doc, xpath = "//Combined_Key"))
+Date = xml_text(xml_find_all(xml_doc, xpath = "//Date"))
+cumulative_cases = xml_text(xml_find_all(xml_doc, xpath = "//cumulative_cases"))
+incident_cases = xml_text(xml_find_all(xml_doc, xpath = "//incident_cases"))
+week = xml_text(xml_find_all(xml_doc, xpath = "//week"))
+wk_incident_cases = xml_text(xml_find_all(xml_doc, xpath = "//wk_incident_cases"))
+
+xml_df = tibble(UID = UID,
+                iso2 = iso2,
+                iso3 = iso3,
+                code3 = code3,
+                county_fips = county_fips,
+                county_name = county_name,
+                state_name = state_name,
+                Combined_Key = Combined_Key,
+                Date = Date,
+                cumulative_cases = cumulative_cases,
+                incident_cases = incident_cases,
+                week = week,
+                wk_incident_cases = wk_incident_cases)
+
+xml_df
+```
+
+Here, we get another `tibble`. Yay! But, boy, the effort required was much greater. XML files are weird. They make me cringe. We had to look at the XML document's structure and pull the columns out individually and assign them manually as columns in a `tibble`. At least we know how to do it!
