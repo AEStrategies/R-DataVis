@@ -12,15 +12,16 @@ output:
     df_print: paged
     theme: darkly
 ---
+
 # Introduction to R programming
 
-R is a scripting language and environment primarily designed for statistical computing and graphics.  R is an extended and free implementation of the S programming language.  R provides a wide variety of statistical (e.g., linear and nonlinear modelling, classical statistical tests, time-series analysis, classification, clustering) and graphical techniques, and is highly extensible.  As a scripting language, R does not need to be compiled into machine code for it to run.  R scripts are run on demand by the R interpreter.
+R is a scripting language and environment primarily designed for statistical computing and graphics. R is an extended and free implementation of the S programming language. R provides a wide variety of statistical (e.g., linear and nonlinear modelling, classical statistical tests, time-series analysis, classification, clustering) and graphical techniques, and is highly extensible. As a scripting language, R does not need to be compiled into machine code for it to run. R scripts are run on demand by the R interpreter.
 
 ## R scripts versus R notebooks
 
 R scripts (files with the .R extension) are text files that define objects, functions, data, read and write data (input and output (I/O)) and flow control. If you print an R file then the reader can't see what it generated without having to run it themselves and capture the results.
 
-An R Markdown document is *knitted* in a fresh R environment to create another file (or set of files) that mixes input and output with the rendered markdown to create publishable files (e.g., HTML, PDF). An R Notebook is an interactive version of an R Markdown document.  It is best to run code chunks in order from top to bottom. You *can* run code chunks out of order in an R Notebook, though that can cause problems later, so it is strongly discouraged.
+An R Markdown document is *knitted* in a fresh R environment to create another file (or set of files) that mixes input and output with the rendered markdown to create publishable files (e.g., HTML, PDF). An R Notebook is an interactive version of an R Markdown document. It is best to run code chunks in order from top to bottom. You *can* run code chunks out of order in an R Notebook, though that can cause problems later, so it is strongly discouraged.
 
 ## Basic arithmetic with R
 
@@ -72,13 +73,13 @@ In math, the *order of operations* are the rules that state the sequence in whic
 
 A way to remember the order of the operations is **PEMDAS**, where in each letter stands for a mathematical operation.
 
-**P**arentheses - The first step is to solve all the operations within the parentheses, from the inside to out.  The R operator here of course is a pair of parentheses ().
+**P**arentheses - The first step is to solve all the operations within the parentheses, from the inside to out. The R operator here of course is a pair of parentheses ().
 
-**E**xponent - Compute all the exponential expressions. The R operator for raising a number to a power is caret ^.
+**E**xponent - Compute all the exponential expressions. The R operator for raising a number to a power is caret \^.
 
-**M**ultiplication and **D**ivision - Next, moving from left to right, multiply and/or divide whichever comes first.  The R operator for multiplication is asterisk *, and for division is slash /.
+**M**ultiplication and **D**ivision - Next, moving from left to right, multiply and/or divide whichever comes first. The R operator for multiplication is asterisk \*, and for division is slash /.
 
-**A**ddition and **S**ubtraction - Lastly, moving from left to right, add and/or subtract whichever comes first.  The R operator for addition is plus +, and for subtraction is minus -.
+**A**ddition and **S**ubtraction - Lastly, moving from left to right, add and/or subtract whichever comes first. The R operator for addition is plus +, and for subtraction is minus -.
 
 ```{r}
 11 * 2 + 14 / 2
@@ -98,7 +99,7 @@ Use parentheses to change the order of operations.
 
 ## Variables
 
-Use the <- character combination to assign an object to a variable. Note how it looks like an arrow pointing from the object to the variable name.
+Use the \<- character combination to assign an object to a variable. Note how it looks like an arrow pointing from the object to the variable name.
 
 ```{r}
 # Use number sign or hashtag for comments
@@ -122,11 +123,11 @@ print(variable.name)
 
 Variables are named objects.
 
-A variable is created the moment you first assign a value to it. To assign a value to a variable, use the <- sign. To output (or print) the variable value, just type the variable name.  R does not have a command for declaring a variable.
+A variable is created the moment you first assign a value to it. To assign a value to a variable, use the \<- sign. To output (or print) the variable value, just type the variable name. R does not have a command for declaring a variable.
 
-In other programming languages, it is common to use = as the assignment operator. In R, we can use =, <-, and -> (uncommon) as assignment operators.
+In other programming languages, it is common to use = as the assignment operator. In R, we can use =, \<-, and -\> (uncommon) as assignment operators.
 
-However, <- **is preferred** in most cases because the = operator can be forbidden in some contexts in R.
+However, \<- **is preferred** in most cases because the = operator can be forbidden in some contexts in R.
 
 We can use variables together and work with them.
 
@@ -134,12 +135,13 @@ We can use variables together and work with them.
 bank.account <- 1000
 ```
 
-Variable assignment can be on the left or the right in R, just change the direction of the assignment arrow.  Note that although this completely *legal*, it is not very typical.
+Variable assignment can be on the left or the right in R, just change the direction of the assignment arrow. Note that although this completely *legal*, it is not very typical.
 
 ```{r}
-# this is the same as deposit -> 10
+# this is the same as deposit <- 10
 100 -> deposit
 ```
+
 ```{r}
 bank.account <- bank.account + deposit
 bank.account
@@ -184,7 +186,7 @@ t
 ```
 
 ```{r}
-f <- F
+f <- FALSE
 f
 ```
 
@@ -347,6 +349,7 @@ v1 + v2
 # subtracting a vector from itself creates a vector of zeros
 v1 - v1
 ```
+
 ```{r}
 v1 - v2
 ```
@@ -381,13 +384,12 @@ If the longer vector length is not a multiple of the shorter vector length, R wi
 ```{r}
 # v3 is longer than v1 and is not a multiple of the length of v1
 v3 <- c(1,2,3,4,5)
-v1 / c(1,2,3,4,5)
+v1 / v3
 ```
 
 ##### Using functions with vectors
 
-Let's learn about a few useful built-in functions that we can use with vectors. A function will be in the form:
-name_of_function(input)
+Let's learn about a few useful built-in functions that we can use with vectors. A function will be in the form: name_of_function(input)
 
 We will learn about creating our own functions later, but R comes with lots of built-in functions that you will commonly use.
 
@@ -474,9 +476,7 @@ v2[c(1,3)]
 
 You can use a colon (:) to indicate the beginning and the ending of the index to extract a contiguous piece from a vector. The format is:
 
-```
-vector[start_index:stop_index]
-```
+    vector[start_index:stop_index]
 
 and you will get that "slice" of the vector returned to you. For example:
 
@@ -525,7 +525,7 @@ v
 v[v>2]
 ```
 
-Let's break this down to see how it works, we first get the vector v>2:
+Let's break this down to see how it works, we first get the vector v\>2:
 
 ```{r}
 v>2
@@ -551,6 +551,7 @@ v[my_filter]
 ### Matrices
 
 ### Creating a Matrix from Vectors
+
 Vectors allow us to store indexed elements. A matrix will allow us to have a 2-dimensional data structure which, like a vector, contains elements consisting of the same data type.
 
 Before diving into the Matrix, let's look into a quick way to create sequential numeric vectors using the colon notation from slicing:
@@ -670,9 +671,7 @@ Just like with vectors, we use the square bracket notation to select elements fr
 
 The syntax is:
 
-```
-example.matrix[rows, columns]
-```
+    example.matrix[rows, columns]
 
 where the index notation (e.g., 1:5) is put in place of the rows or columns. If either rows or columns is left blank, then we are selecting all the rows or all the columns.
 
@@ -777,7 +776,7 @@ mat * mat
 
 #### Matrix multiplication
 
-A quick side-note on matrix multiplications. You can perform arithmetic multiplication on an element-by-element basis using the * sign in R. You should note this is *not* the same as [Matrix Multiplication](https://en.wikipedia.org/wiki/Matrix_multiplication). If you are familiar with the mathematics behind this topic and want to use R to perform *true* matrix multiplication, you can use the **%*%** operator:
+A quick side-note on matrix multiplications. You can perform arithmetic multiplication on an element-by-element basis using the \* sign in R. You should note this is *not* the same as [Matrix Multiplication](https://en.wikipedia.org/wiki/Matrix_multiplication). If you are familiar with the mathematics behind this topic and want to use R to perform *true* matrix multiplication, you can use the \*\*%\*%\*\* operator:
 
 ```{r}
 mat2 <- matrix(1:9, nrow=3)
@@ -800,10 +799,9 @@ animal <- c('d','c','d','c','c')
 id <- 1:length(animal)
 ```
 
-Note that we used a function called **length()** to calculate the length of the animal vector.  If the length of the animal vector changes, then so will the id vector.  This is a good practice because it means that if something changes in the data (and it will), that we don't need to change much (if any) of the code to facilitate the change.
+Note that we used a function called **length()** to calculate the length of the animal vector. If the length of the animal vector changes, then so will the id vector. This is a good practice because it means that if something changes in the data (and it will), that we don't need to change much (if any) of the code to facilitate the change.
 
-We want to convert the animal vector into information that an algorithm or equation can understand more easily. Meaning we want to begin to check how many categories (factor levels) are in our character vector.
-We can pass the vector through the **factor()** function like so to get this information:
+We want to convert the animal vector into information that an algorithm or equation can understand more easily. Meaning we want to begin to check how many categories (factor levels) are in our character vector. We can pass the vector through the **factor()** function like so to get this information:
 
 ```{r}
 factor.ani <- factor(animal)
@@ -821,9 +819,7 @@ ord.cat
 
 You could begin to assign to these variables, such that:
 
-```
-cold < med < hot
-```
+    cold < med < hot
 
 if you wanted to assign an order while using the factor() function, you can pass in the arguments **ordered=True** and the pass in the **levels=** and pass in a vector *in the order you want the levels to be in*.
 
@@ -845,7 +841,7 @@ summary(fact.temp)
 
 ### Data frames
 
-We've learned about vectors and their two-dimensional counterpart, matrices. Now we will learn about data frames, one of the main tools for data analysis with R.  Matrix inputs were limited because all the data inside of the matrix had to be of the same data type (numerics, logicals, etc).  With data frames we will be able to organize and mix data types to create a very powerful data structure.
+We've learned about vectors and their two-dimensional counterpart, matrices. Now we will learn about data frames, one of the main tools for data analysis with R. Matrix inputs were limited because all the data inside of the matrix had to be of the same data type (numerics, logicals, etc). With data frames we will be able to organize and mix data types to create a very powerful data structure.
 
 #### Built-in data frames
 
@@ -931,9 +927,7 @@ summary(df)
 
 We can use the same bracket notation we used for matrices:
 
-```
-df[rows, columns]
-```
+    df[rows, columns]
 
 ```{r}
 # Everything from first row
@@ -966,9 +960,7 @@ df[1:5,c('days', 'temp')]
 
 If you want all the values of a particular column you can use the dollar sign directly after the data frame as follows:
 
-```
-df.name$column.name
-```
+    df.name$column.name
 
 ```{r}
 df$rain
@@ -1140,9 +1132,9 @@ str(double_list)
 
 Logical Operators will allow us to combine multiple comparison operators. The logical operators we will learn about are:
 
-- AND - &
-- OR - |
-- NOT - !
+-   AND - &
+-   OR - |
+-   NOT - !
 
 The best way to explain these is to see some examples.
 
@@ -1183,11 +1175,11 @@ We can basically think of this as a series of Logical Boolean values, TRUE & TRU
 x==2 & x > 1
 ```
 
-Returned FALSE because while x > 1 is TRUE, we need BOTH to be TRUE, thus the AND statement &.
+Returned FALSE because while x \> 1 is TRUE, we need BOTH to be TRUE, thus the AND statement &.
 
-### OR - |
+### OR - \|
 
-What if we only want one of them to be true? That's when we use OR |. For example:
+What if we only want one of them to be true? That's when we use OR \|. For example:
 
 ```{r}
 x==2 | x > 1
@@ -1253,7 +1245,7 @@ tt & tf
 tt | tf
 ```
 
-To compare only the first elements use && or ||.
+To compare only the first elements use && or \|\|.
 
 ```{r}
 ft && tt
@@ -1281,13 +1273,11 @@ Now it is time to finally start learning how we can program some sort of flow co
 
 Here is the syntax for an if statement in R:
 
-```
-if (condition) {
-    # Only when the condition is TRUE, execute this code between the braces ({})
-}
-```
+    if (condition) {
+        # Only when the condition is TRUE, execute this code between the braces ({})
+    }
 
-This construct allows us to implement flow control logic in our programming.  Only when the given condition is true then execute the code inside of the braces.  Note that in R, the condition *must* be wrapped in parentheses () or you'll get a syntax error when you run the code.
+This construct allows us to implement flow control logic in our programming. Only when the given condition is true then execute the code inside of the braces. Note that in R, the condition *must* be wrapped in parentheses () or you'll get a syntax error when you run the code.
 
 Suppose we have two variables, **hot** and **temp**. Imagine that **hot** starts off as FALSE and **temp** is some number in degrees Fahrenheit. If the **temp** is greater than 80 than we want to assign **hot==TRUE**, otherwise **hot** should remain **FALSE**.
 
@@ -1337,13 +1327,11 @@ A good editor like RStudio will help you make sure everything is aligned reasona
 
 If we want to execute another block that occurs if the **if** statement is false, we can use an **else** statement to do this! It has the syntax:
 
-```
-if (condition) {
-  # Code to execute if true
-} else {
-  # Code to execute if above was not true
-}
-```
+    if (condition) {
+      # Code to execute if true
+    } else {
+      # Code to execute if above was not true
+    }
 
 Notice the alignment of the curly brackets and the use of the **else** keyword. Let's see it in action!
 
@@ -1389,7 +1377,7 @@ if (temp > 80) {
 }
 ```
 
-Let's try a slightly more elaborate example of **if**, **else**, and **else if**.  Imagine that we have a video game store with Xbox and PlayStation units for sale and we want a daily automated report to go to HQ depending on how many units we sell.
+Let's try a slightly more elaborate example of **if**, **else**, and **else if**. Imagine that we have a video game store with Xbox and PlayStation units for sale and we want a daily automated report to go to HQ depending on how many units we sell.
 
 ```{r}
 # Items sold that day (hopefully read from the store's point of sale devices)
@@ -1417,12 +1405,10 @@ print(report)
 
 **while** loops are a way to have your program continuously run some block of code until a condition becomes false. The syntax is:
 
-```
-while (condition){
-    # Code executed here 
-    # while condition is true
-}
-```
+    while (condition){
+        # Code executed here 
+        # while condition is true
+    }
 
 A major concern when working with a **while** loop is to make sure that *at some point the condition should become false* so that the loop finishes, otherwise the **while** loop will go on forever.
 
@@ -1530,11 +1516,9 @@ Notice how the break stopped the `"I will also print, woohoo!"` from occurring. 
 
 A for loop allows us to iterate over an object (such as a vector) and we can then perform and execute blocks of codes for every loop we go through. The syntax for a for loop is:
 
-```
-for (temporary_variable in object){
-    # Execute some code at every loop
-}
-```
+    for (temporary_variable in object){
+        # Execute some code at every loop
+    }
 
 ##### For loop over a vector
 
@@ -1625,19 +1609,15 @@ help(sum)
 
 Notice how the format is:
 
-```
-name_of_function(input1, input2,....)
-```
+    name_of_function(input1, input2,....)
 
 #### Creating our own functions
 
 Here is the syntax for writing your own function:
 
-```
-name_of_function <- function(arg1, arg2,...){
-    # Code that gets executed when function is called
-}
-```
+    name_of_function <- function(arg1, arg2,...){
+        # Code that gets executed when function is called
+    }
 
 Defining our own functions:
 
@@ -1657,7 +1637,7 @@ Example 2
 helloyou <- function(name){
     print(paste('hello ', name))
 }
-helloyou('Pat')
+helloyou(name = 'Pat')
 ```
 
 Example 3
@@ -1666,7 +1646,7 @@ Example 3
 add_num <- function(num1,num2){
     print(num1+num2)
 }
-add_num(5,10)
+add_num(num1 = 5, num2 = 10)
 ```
 
 #### Default values
@@ -1683,7 +1663,7 @@ hello_someone()
 
 ```{r}
 # overwrite default
-hello_someone('Sam')
+hello_someone(name = 'Sam')
 ```
 
 You'll see lots of built-in functions use default values for a variety of tasks, where the users will usually need a particular value.
@@ -1700,13 +1680,13 @@ formal()
 ```
 
 ```{r}
-formal('Issac Newton')
+formal(name = 'Issac Newton')
 ```
 
 Notice how we aren't printing, we are returning, meaning we can assign this to a variable:
 
 ```{r}
-var <- formal('Marie Curie', 'Ms.')
+var <- formal(name = 'Marie Curie', title = 'Ms.')
 var
 ```
 
@@ -1723,6 +1703,7 @@ square <- function(input) {
   return(result)
 }
 ```
+
 ```{r}
 square(4)
 
@@ -1731,9 +1712,7 @@ square(4)
 #input # Not defined outside the scope of the function
 ```
 
-These errors indicate that these variables are only defined inside the scope of the function.
-So, variables defined inside of a function are only defined (or redefined) inside of that function.
-However, variables assigned outside of the function are global variables, and the function will have access to them due to their scope.
+These errors indicate that these variables are only defined inside the scope of the function. So, variables defined inside of a function are only defined (or redefined) inside of that function. However, variables assigned outside of the function are global variables, and the function will have access to them due to their scope.
 
 For example:
 
@@ -1766,5 +1745,5 @@ Here is what is going on.
 
 Notice two things:
 
-1. The reassignment of **stuff** only effects the scope of the stuff variable inside the function
-2. The **fun()** function first checks to see if **v** is defined at the *function scope*, if not (which was the case) it will then search the *global scope* for a variable named **v**, leading to it printing out "I'm global v".
+1.  The reassignment of **stuff** only effects the scope of the stuff variable inside the function
+2.  The **fun()** function first checks to see if **v** is defined at the *function scope*, if not (which was the case) it will then search the *global scope* for a variable named **v**, leading to it printing out "I'm global v".

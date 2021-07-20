@@ -1,9 +1,9 @@
 ---
 title: "Arithmetic in R"
 output:
-#  pdf_document:
-#    toc: yes
-#    toc_depth: 4
+ pdf_document:
+   toc: yes
+   toc_depth: 4
   html_notebook:
     toc: yes
     toc_depth: 4

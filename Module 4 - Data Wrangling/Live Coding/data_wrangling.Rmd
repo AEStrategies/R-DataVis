@@ -96,7 +96,9 @@ us_confirmed_long_jhu = read.csv(jhu_url) %>%
                values_to = "cumulative_cases") %>%
   
   # Adjust JHU dates back one day to reflect US time, more or less, because the data are in GMT since they are, originally, global.
-  mutate(Date = lubridate::mdy(Date) - lubridate::days(1)) %>%
+  mutate(Date = lubridate::mdy(gsub("X", 
+                                    "", 
+                                    Date)) - lubridate::days(1)) %>%
   
   # Select only US states, not Canada provinces or any territories
   filter(country_region == "US") %>% 

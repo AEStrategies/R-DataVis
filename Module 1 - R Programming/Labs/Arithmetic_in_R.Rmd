@@ -1,9 +1,9 @@
 ---
 title: "Arithmetic in R"
 output:
-#  pdf_document:
-#    toc: yes
-#    toc_depth: 4
+ pdf_document:
+   toc: yes
+   toc_depth: 4
   html_notebook:
     toc: yes
     toc_depth: 4
@@ -27,8 +27,8 @@ As you've seen in the live coding, R can be used to solve equations and print th
 
 ```{r}
 # Execute this block to see 2 different ways to print the value stored in x:
-x
-print(x)
+# x
+# print(x)
 ```
 
 We've assigned an object to the variable x, which now resides in our global environment.  In the pane in the top right, if you click the "Environment" you can see your global variables.  At this point, lets clear our environment to keep things tidy.  As we progress through this notebook, keep your eye on the environment to inspect your variables without having to print them out.
@@ -111,13 +111,13 @@ Here is an example context where the = and <- operators behave differently.
 # execute this block and observe what happened
 median(x = 1:10)
 # This next line will fail
-x
+#x
 ```
 
 ```{r}
 median(x <- 1:10)
 # This next line will succeed
-x
+# x
 ```
 
 Congratulations!  You've learned how to open an R notebook in RStudio, do basic mathematical calculations, variable assignments, insecting variables in the global environment, cleaning variables in the global environment, output formatting using the sprint() function, code comments, how to get help on functions, and how to knit the R notebook into an HTML document for publishing.
