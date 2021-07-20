@@ -95,7 +95,8 @@ messy_data %>% count(case_status)
 
 # We might as well drop the redundant country identifiers, too.
 
-messy_data %>%
+messy_data = 
+  messy_data %>%
   select(-c(case_status, iso2, iso3))
 
 # And, why not split sex and age-group, since we know what those are.
