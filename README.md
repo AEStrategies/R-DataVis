@@ -2,6 +2,12 @@
 
 Welcome to the Data Visualization in R for beginners!
 
+This interactive, hands-on course is designed for learning the basics of the R programming language to enable creating and interpreting customized data visualizations.  High-level topics include:
+1. Learning R using RStudio to create R scripts and interactive R notebooks
+1. Reading data in various formats
+1. Data wrangling, cleansing, and merging
+1. Data visualizations using ggplot2 and shiny
+
 ## Prerequisites
 1. RStudio IDE with the following packages installed:
     1. tidyverse
