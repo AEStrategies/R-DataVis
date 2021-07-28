@@ -68,8 +68,17 @@ This interactive, hands-on course is designed for learning the basics of the R p
 1. Familiarization with the best graph to use for various common use-cases
 
 ### **Module 7 - Introduction to interactive data visualization using shiny**
+How to build a Shiny app
+    - Data import and overview
+    - Data validation
+    - Data subset and table view
+    - Select key variables
 
 ### **Module 8 - Introduction to data.table as a high performance alternative to data.frame and dplyr**
+1. Alternative data importation methods
+1. More efficient methods of data cleansing
+1. Data manipulation analogs to `dplyr`
+1. `data.table` to `ggplot2`
 
 ### **Module 9 - Introduction to Natural Language Processing (NLP) and Text Mining**
 1. Learn the differences between structured, semi-structured, and unstructured data
