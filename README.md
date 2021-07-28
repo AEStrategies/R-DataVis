@@ -108,3 +108,7 @@ This interactive, hands-on course is designed for learning the basics of the R p
     1. Oversampling to overcome dependent variable imbalance
     1. Detecting and correcting under and over fitting
     1. Hyperparameter tuning
+
+## Course Delivery
+
+This course is designed to be delivered virtually using a video conferencing solution like Zoom, WebEx, or MS Teams.  The course will be delivered by at least one AES instructor.  Each training module features a presentation and live coding.  Many modules also have hands-on instructor-led labs.  The first module covering the R language also has a quiz to ensure that the course work is being well understood by the students.  AES can tailor this course to use your organization’s data, for additional relevance, if desired.
