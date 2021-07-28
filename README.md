@@ -68,11 +68,11 @@ This interactive, hands-on course is designed for learning the basics of the R p
 1. Familiarization with the best graph to use for various common use-cases
 
 ### **Module 7 - Introduction to interactive data visualization using shiny**
-How to build a Shiny app
-    - Data import and overview
-    - Data validation
-    - Data subset and table view
-    - Select key variables
+1. How to build a Shiny app
+1. Data import and overview
+1. Data validation
+1. Data subset and table view
+1. Select key variables
 
 ### **Module 8 - Introduction to data.table as a high performance alternative to data.frame and dplyr**
 1. Alternative data importation methods
