@@ -11,9 +11,9 @@ This interactive, hands-on course is designed for learning the basics of the R p
 ## Prerequisites
 1. R proper (available here: https://cran.r-project.org/)
 1. RStudio IDE (available here: https://www.rstudio.com/products/rstudio/download/) with the following packages installed:
-    1. tidyverse [install.packages("tidyverse"); library(tidyverse)]
-    1. data.table [install.packages("data.table"); library(data.table)]
-    1. shiny [install.packages("shiny"); library(shiny)]
+    1. tidyverse [`install.packages("tidyverse")`; `library(tidyverse)`]
+    1. data.table [`install.packages("data.table")`; `library(data.table)`]
+    1. shiny [`install.packages("shiny")`; `library(shiny)`]
 1. A modern web browser
 
 ## Course Objectives
