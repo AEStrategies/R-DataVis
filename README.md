@@ -9,7 +9,8 @@ This interactive, hands-on course is designed for learning the basics of the R p
 1. Data visualizations using ggplot2 and shiny
 
 ## Prerequisites
-1. RStudio IDE with the following packages installed:
+1. R proper (available here: https://cran.r-project.org/)
+1. RStudio IDE (available here: https://www.rstudio.com/products/rstudio/download/) with the following packages installed:
     1. tidyverse
     1. data.table
     1. shiny
