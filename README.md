@@ -14,6 +14,7 @@ This interactive, hands-on course is designed for learning the basics of the R p
     1. tidyverse [`install.packages("tidyverse")`; `library(tidyverse)`]
     1. data.table [`install.packages("data.table")`; `library(data.table)`]
     1. shiny [`install.packages("shiny")`; `library(shiny)`]
+1. RTools (available here: https://cran.r-project.org/bin/windows/Rtools/rtools42/rtools.html)
 1. A modern web browser
 
 ## Course Objectives
